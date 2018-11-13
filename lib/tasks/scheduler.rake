@@ -1,6 +1,6 @@
 desc "This task is called by the Heroku scheduler add-on"
 task :update_feed => :environment do
-  require 'line/bot'  # gem 'line-bot-api'
+  require 'line/bot'
   require 'open-uri'
   require 'kconv'
   require 'rexml/document'
@@ -16,26 +16,28 @@ task :update_feed => :environment do
   xml  = open( url ).read.toutf8
   doc = REXML::Document.new(xml)
   # パスの共通部分を変数化（area[4]は「東京地方」を指定している）
-  xpath = 'weatherforecast/pref/area[4]/info/rainfallchance/'
+  xpath = 'weatherforecast/pref/area[4]/info/'
+  max_temp = doc.elements[xpath + 'temperature/range'].text
+  min_temp = doc.elements[xpath + 'temperature/range[2]'].text
   # 6時〜12時の降水確率（以下同様）
-  per06to12 = doc.elements[xpath + 'period[2]'].text
-  per12to18 = doc.elements[xpath + 'period[3]'].text
-  per18to24 = doc.elements[xpath + 'period[4]'].text
+  per06to12 = doc.elements[xpath + 'rainfallchance/period[2]'].text
+  per12to18 = doc.elements[xpath + 'rainfallchance/period[3]'].text
+  per18to24 = doc.elements[xpath + 'rainfallchance/period[4]'].text
   # メッセージを発信する降水確率の下限値の設定
   min_per = 20
   if per06to12.to_i >= min_per || per12to18.to_i >= min_per || per18to24.to_i >= min_per
     word1 =
       ["いい朝だね！",
        "今日もよく眠れた？",
-       "二日酔い大丈夫？",
+       "おはよう！",
        "早起きしてえらいね！",
        "いつもより起きるのちょっと遅いんじゃない？"].sample
     word2 =
-      ["気をつけて行ってきてね(^^)",
-       "良い一日を過ごしてね(^^)",
-       "雨に負けずに今日も頑張ってね(^^)",
-       "今日も一日楽しんでいこうね(^^)",
-       "楽しいことがありますように(^^)"].sample
+      ["絶好のサウナ日和だね(^^)",
+       "サウナが気持ちい季節になってきたね(^^)",
+       "サウナが私を呼んでいる…",
+       "今日も一日頑張ったら、サウナにいこうね(^^)",
+       "サウナ、サウナ♪♪"].sample
     # 降水確率によってメッセージを変更する閾値の設定
     mid_per = 50
     if per06to12.to_i >= mid_per || per12to18.to_i >= mid_per || per18to24.to_i >= mid_per
@@ -43,9 +45,17 @@ task :update_feed => :environment do
     else
       word3 = "今日は雨が降るかもしれないから折りたたみ傘があると安心だよ！"
     end
+    hot_day = 25
+    cold_day = 10
+    if max_temp >= hot_day
+      word4 = "今日は暑いから水風呂でととのっちゃおう！"
+    end
+    if min_temp <= cold_day
+      word5 = "今日は水風呂がギンギンに冷えそうだね！"
+    end
     # 発信するメッセージの設定
     push =
-      "#{word1}\n#{word3}\n降水確率はこんな感じだよ。\n　  6〜12時　#{per06to12}％\n　12〜18時　 #{per12to18}％\n　18〜24時　#{per18to24}％\n#{word2}"
+      "#{word1}\n#{word3}\n　最高気温　#{max_temp}℃\n　最低気温　#{min_temp}℃\n#{word4}#{word5}\n降水確率はこんな感じだよ。\n　  6〜12時　#{per06to12}％\n　12〜18時　 #{per12to18}％\n　18〜24時　#{per18to24}％\n#{word2}"
     # メッセージの発信先idを配列で渡す必要があるため、userテーブルよりpluck関数を使ってidを配列で取得
     user_ids = User.all.pluck(:line_id)
     message = {
