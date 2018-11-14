@@ -80,12 +80,11 @@ class LinebotController < ApplicationController
             else
               if min_temp <= 10
                 word1 = "今日は冷えるからサウナに行こう！"
-              else
-                word2 =
-                  ["絶好の外気浴日和だね(^^)",
-                   "天気がいいからいつもとは違うサウナに足伸ばしてみる？",
-                   "天気がいい日もサウナ！"].sample
               end
+              word2 =
+                ["絶好の外気浴日和だね(^^)",
+                 "天気がいいからいつもとは違うサウナに足伸ばしてみる？",
+                 "天気がいい日もサウナ！"].sample
                 push =
                   "今日の天気？\n今日は雨は降らなさそうだよ。\n　最高気温　#{max_temp}℃\n　最低気温　#{min_temp}℃\n#{word1}\n#{word2}"
             end
