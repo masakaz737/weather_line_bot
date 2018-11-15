@@ -78,9 +78,7 @@ class LinebotController < ApplicationController
               push =
                 "今日の天気？\n今日は雨が降りそうだから傘があった方が安心だよ。\n　最高気温　#{max_temp}℃\n　最低気温　#{min_temp}℃\n　  6〜12時　#{per06to12}％\n　12〜18時　 #{per12to18}％\n　18〜24時　#{per18to24}％\n#{word}"
             else
-              if min_temp <= 10
-                word1 = "今日は冷えるからサウナに行こう！"
-              end
+              word1 = "今日は冷えるからサウナに行こう！" if min_temp <= 10
               word2 =
                 ["絶好の外気浴日和だね(^^)",
                  "天気がいいからいつもとは違うサウナに足伸ばしてみる？",
